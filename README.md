@@ -1,1 +1,1 @@
-# django-instagram
+# Django Instagram
