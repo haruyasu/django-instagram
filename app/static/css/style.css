@@ -148,6 +148,10 @@
     color: #fff;
 }
 
+.profile_picture {
+    width: 200px;
+}
+
 footer.sticky-footer {
     padding: 2rem 0;
     flex-shrink: 0;

@@ -2,45 +2,116 @@
 
 {% block content %}
 
-<div id="content">
-    <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
-        <form class="d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
-            <div class="input-group">
-                <input type="text" class="form-control bg-light border-0 small" placeholder="検索...">
-                <div class="input-group-append">
-                    <button class="btn btn-primary" type="button">
-                        <i class="fas fa-search fa-sm"></i>
-                    </button>
-                </div>
-            </div>
-        </form>
-    </nav>
+<div class="container-fluid mt-3">
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">アカウント情報</h1>
+    </div>
 
-    <div class="container-fluid">
-        <div class="d-sm-flex align-items-center justify-content-between mb-4">
-            <h1 class="h3 mb-0 text-gray-800">ダッシュボード</h1>
-        </div>
+    {% for key, value in account_data.items %}
+    {% if key == 'username' %}
+    <p>ユーザー名: {{value}}</p>
+    {% endif %}
 
-        <div class="row">
-            <div class="col-xl-3 col-md-6 mb-4">
-                <div class="card border-left-primary shadow h-100 py-2">
-                    <div class="card-body">
-                        <div class="row no-gutters align-items-center">
-                            <div class="col mr-2">
-                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                    Earnings (Monthly)
-                                </div>
-                                <div class="h5 mb-0 font-weight-bold text-gray-800">$40,000</div>
+    {% if key == 'profile_picture_url' %}
+    <div class="profile_picture">
+        <img class="card-img-top rounded-circle" src="{{value}}" alt="">
+    </div>
+    {% endif %}
+
+    {% if key == 'biography' %}
+    <p>自己紹介: {{value}}</p>
+    {% endif %}
+
+    <div class="row">
+        {% if key == 'follows_count' %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                フォロー数
                             </div>
-                            <div class="col-auto">
-                                <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{value}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        {% endif %}
+
+        {% if key == 'followers_count' %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                フォロワー数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{value}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if key == 'media_count' %}
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                投稿数
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{value}}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
+    {% endfor %}
+
+    <h2>フォロワー数</h2>
+    <canvas id="follower_count_chart"></canvas>
+
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const ctx = document.getElementById('follower_count_chart').getContext('2d');
+    const aaa = '{{ follower_time }}'
+    console.log(aaa)
+    const bbb = '{{ follower_val }}'
+    console.log(bbb)
+    const chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: '{{ follower_time }}',
+            datasets: [{
+                label: 'フォロワー',
+                backgroundColor: 'rgb(255, 99, 132)',
+                borderColor: 'rgb(255, 99, 132)',
+                data: '{{ follower_val }}'
+            }]
+        },
+        options: {}
+    });
+</script>
 
 {% endblock %}

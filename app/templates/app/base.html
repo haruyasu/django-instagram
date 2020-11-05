@@ -24,23 +24,30 @@
 			</a>
 			<hr class="sidebar-divider my-0">
 			<li class="nav-item">
-				<a class="nav-link" href="#">
+				<a class="nav-link" href="{% url 'index' %}">
 					<i class="fas fa-fw fa-cog"></i>
-					<span>ダッシュボード</span>
+					<span>アカウント情報</span>
 				</a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link" href="#">
+				<a class="nav-link" href="{% url 'insight' %}">
 					<i class="fas fa-fw fa-cog"></i>
-					<span>ダッシュボード</span>
+					<span>インサイト</span>
+				</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="{% url 'hash' %}">
+					<i class="fas fa-fw fa-cog"></i>
+					<span>ハッシュタグ</span>
 				</a>
 			</li>
 		</ul>
 
 		<div id="content-wrapper" class="d-flex flex-column">
-            {% block content %}
-            {% endblock %}
-
+			<div id="content">
+				{% block content %}
+				{% endblock %}
+			</div>
             <footer class="sticky-footer bg-white">
 				<div class="container my-auto">
 					<div class="copyright text-center my-auto">
@@ -50,6 +57,9 @@
 			</footer>
 		</div>
 	</div>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+	{% block extra_js %}
+    {% endblock %}
 </body>
 
 </html>
