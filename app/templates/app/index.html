@@ -3,112 +3,146 @@
 {% block content %}
 
 <div class="container-fluid mt-3">
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">アカウント情報</h1>
+    <h3>ダッシュボード</h3>
+    <div class="d-flex align-items-center justify-content-center flex-column">
+        <div class="profile_picture">
+            <img class="card-img-top rounded-circle" src="{{ profile_picture_url }}" alt="">
+        </div>
+        <h4 class="my-3">{{ username }}</h4>
+    </div>
+    <h4 class="mt-4">サマリー</h4>
+    <div class="card-columns">
+        <div class="card p-3">
+            <h5>フォロワー数</h5>
+            <div class="display-4">{{ followers_count }}</div>
+            <p>2020-11-05</p>
+        </div>
+        <div class="card p-3">
+            <h5>フォロー数</h5>
+            <div class="display-4">{{ follows_count }}</div>
+            <p>2020-11-05</p>
+        </div>
+        <div class="card p-3">
+            <h5>投稿数</h5>
+            <div class="display-4">{{ media_count }}</div>
+            <p>2020-11-05</p>
+        </div>
     </div>
 
-    {% for key, value in account_data.items %}
-    {% if key == 'username' %}
-    <p>ユーザー名: {{value}}</p>
-    {% endif %}
-
-    {% if key == 'profile_picture_url' %}
-    <div class="profile_picture">
-        <img class="card-img-top rounded-circle" src="{{value}}" alt="">
-    </div>
-    {% endif %}
-
-    {% if key == 'biography' %}
-    <p>自己紹介: {{value}}</p>
-    {% endif %}
-
+    <h4 class="mt-4">推移</h4>
     <div class="row">
-        {% if key == 'follows_count' %}
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                フォロー数
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{value}}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="col-4">
+            <div class="card p-3">
+                <canvas id="follower_count_chart"></canvas>
             </div>
         </div>
-        {% endif %}
-
-        {% if key == 'followers_count' %}
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                フォロワー数
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{value}}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="col-4">
+            <div class="card p-3">
+                <canvas id="follows_count_chart"></canvas>
             </div>
         </div>
-        {% endif %}
-
-        {% if key == 'media_count' %}
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                投稿数
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{value}}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-calendar fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
+        <div class="col-4">
+            <div class="card p-3">
+                <canvas id="ff_chart"></canvas>
             </div>
         </div>
-        {% endif %}
     </div>
-    {% endfor %}
 
-    <h2>フォロワー数</h2>
-    <canvas id="follower_count_chart"></canvas>
-
+    <h4 class="mt-4">最新投稿</h4>
+    <div class="card p-3">
+        <div class="row">
+            <div class="col-md-4">
+                <a href="{{ permalink }}">
+                    <img class="card-img-top" src="{{ media_url }}" alt="">
+                </a>
+            </div>
+            <div class="col-md-8">
+                <table class="table table-sm">
+                    <tr>
+                        <td>投稿日</td>
+                        <td>{{ timestamp }}</td>
+                    </tr>
+                    <tr>
+                        <td>インプレッション</td>
+                        <td>{{ imp }}</td>
+                    </tr>
+                    <tr>
+                        <td>リーチ数</td>
+                        <td>{{ reach }}</td>
+                    </tr>
+                    <tr>
+                        <td>いいね数</td>
+                        <td>{{ like_count }}</td>
+                    </tr>
+                    <tr>
+                        <td>コメント数</td>
+                        <td>{{ comments_count }}</td>
+                    </tr>
+                    <tr>
+                        <td>保存数</td>
+                        <td>{{ save }}</td>
+                    </tr>
+                    <tr>
+                        <td>エンゲージメント</td>
+                        <td>{{ eng }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    const ctx = document.getElementById('follower_count_chart').getContext('2d');
-    const aaa = '{{ follower_time }}'
-    console.log(aaa)
-    const bbb = '{{ follower_val }}'
-    console.log(bbb)
-    const chart = new Chart(ctx, {
+    const follower_count_ctx = document.getElementById("follower_count_chart");
+    const follower_count = new Chart(follower_count_ctx, {
         type: 'line',
         data: {
-            labels: '{{ follower_time }}',
-            datasets: [{
-                label: 'フォロワー',
-                backgroundColor: 'rgb(255, 99, 132)',
-                borderColor: 'rgb(255, 99, 132)',
-                data: '{{ follower_val }}'
-            }]
+            labels: ['2020-11-04', '2020-11-05', '2020-11-06'],
+            datasets: [
+                {
+                    label: 'フォロワー数',
+                    data: [100, 120, 110],
+                    borderColor: "rgba(255,0,0,1)",
+                    backgroundColor: "rgba(0,0,0,0)"
+                }
+            ],
+        },
+        options: {}
+    });
+
+    const follows_count_ctx = document.getElementById("follows_count_chart");
+    const follows_count = new Chart(follows_count_ctx, {
+        type: 'line',
+        data: {
+            labels: ['2020-11-04', '2020-11-05', '2020-11-06'],
+            datasets: [
+                {
+                    label: 'フォロー数',
+                    data: [100, 120, 110],
+                    borderColor: "rgba(255,0,0,1)",
+                    backgroundColor: "rgba(0,0,0,0)"
+                }
+            ],
+        },
+        options: {}
+    });
+
+    const ff_ctx = document.getElementById("ff_chart");
+    const ff = new Chart(ff_ctx, {
+        type: 'line',
+        data: {
+            labels: ['2020-11-04', '2020-11-05', '2020-11-06'],
+            datasets: [
+                {
+                    label: 'フォロー・フォロワー比率',
+                    data: [100, 120, 110],
+                    borderColor: "rgba(255,0,0,1)",
+                    backgroundColor: "rgba(0,0,0,0)"
+                }
+            ],
         },
         options: {}
     });
