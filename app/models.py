@@ -5,7 +5,7 @@ from django.utils import timezone
 class Insight(models.Model):
     follower = models.IntegerField('フォロワー')
     follows = models.IntegerField('フォロー')
-    created = models.DateField("作成日", default=timezone.now)
+    label = models.CharField("作成日", max_length=200)
 
     def __str__(self):
-        return str(self.created)
+        return str(self.label)

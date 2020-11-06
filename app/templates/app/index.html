@@ -15,36 +15,30 @@
         <div class="card p-3">
             <h5>フォロワー数</h5>
             <div class="display-4">{{ followers_count }}</div>
-            <p>2020-11-05</p>
+            <p>{{ today }}</p>
         </div>
         <div class="card p-3">
             <h5>フォロー数</h5>
             <div class="display-4">{{ follows_count }}</div>
-            <p>2020-11-05</p>
+            <p>{{ today }}</p>
         </div>
         <div class="card p-3">
             <h5>投稿数</h5>
             <div class="display-4">{{ media_count }}</div>
-            <p>2020-11-05</p>
+            <p>{{ today }}</p>
         </div>
     </div>
 
     <h4 class="mt-4">推移</h4>
-    <div class="row">
-        <div class="col-4">
-            <div class="card p-3">
-                <canvas id="follower_count_chart"></canvas>
-            </div>
+    <div class="card-columns">
+        <div class="card p-3">
+            <canvas id="follower_count_chart"></canvas>
         </div>
-        <div class="col-4">
-            <div class="card p-3">
-                <canvas id="follows_count_chart"></canvas>
-            </div>
+        <div class="card p-3">
+            <canvas id="follows_count_chart"></canvas>
         </div>
-        <div class="col-4">
-            <div class="card p-3">
-                <canvas id="ff_chart"></canvas>
-            </div>
+        <div class="card p-3">
+            <canvas id="ff_chart"></canvas>
         </div>
     </div>
 
@@ -96,55 +90,84 @@
 
 {% block extra_js %}
 <script>
+    const insight_data = JSON.parse('{{ insight_data|safe }}');
+
     const follower_count_ctx = document.getElementById("follower_count_chart");
     const follower_count = new Chart(follower_count_ctx, {
         type: 'line',
         data: {
-            labels: ['2020-11-04', '2020-11-05', '2020-11-06'],
+            labels: insight_data.label_data,
             datasets: [
                 {
                     label: 'フォロワー数',
-                    data: [100, 120, 110],
-                    borderColor: "rgba(255,0,0,1)",
-                    backgroundColor: "rgba(0,0,0,0)"
+                    data: insight_data.follower_data,
+                    borderColor: "#EC6D64",
+                    backgroundColor: "#EC6D64",
                 }
             ],
         },
-        options: {}
+        options: {
+            elements: {
+                line: {
+                    tension: 0,
+                },
+                point:{
+                    radius: 2
+                }
+            }
+        }
     });
 
     const follows_count_ctx = document.getElementById("follows_count_chart");
     const follows_count = new Chart(follows_count_ctx, {
         type: 'line',
         data: {
-            labels: ['2020-11-04', '2020-11-05', '2020-11-06'],
+            labels: insight_data.label_data,
             datasets: [
                 {
                     label: 'フォロー数',
-                    data: [100, 120, 110],
-                    borderColor: "rgba(255,0,0,1)",
-                    backgroundColor: "rgba(0,0,0,0)"
+                    data: insight_data.follows_data,
+                    borderColor: "#EC6D64",
+                    backgroundColor: "#EC6D64",
                 }
             ],
         },
-        options: {}
+        options: {
+            elements: {
+                line: {
+                    tension: 0,
+                },
+                point:{
+                    radius: 2
+                }
+            }
+        }
     });
 
     const ff_ctx = document.getElementById("ff_chart");
     const ff = new Chart(ff_ctx, {
         type: 'line',
         data: {
-            labels: ['2020-11-04', '2020-11-05', '2020-11-06'],
+            labels: insight_data.label_data,
             datasets: [
                 {
                     label: 'フォロー・フォロワー比率',
-                    data: [100, 120, 110],
-                    borderColor: "rgba(255,0,0,1)",
-                    backgroundColor: "rgba(0,0,0,0)"
+                    data: insight_data.ff_data,
+                    borderColor: "#EC6D64",
+                    backgroundColor: "#EC6D64",
                 }
             ],
         },
-        options: {}
+        options: {
+            elements: {
+                line: {
+                    tension: 0,
+                },
+                point:{
+                    radius: 2
+                }
+            }
+        }
     });
 </script>
 

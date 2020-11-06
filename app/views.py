@@ -80,6 +80,15 @@ class IndexView(View):
         follows_count = account_data['follows_count']
         media_count = account_data['media_count']
 
+        today = datetime.date.today()
+        obj, created = Insight.objects.update_or_create(
+            label=today,
+            defaults={
+                'follower': followers_count,
+                'follows': follows_count,
+            }
+        )
+
         latest_media_data = account_data['media']['data'][0]
         caption = latest_media_data['caption']
         media_type = latest_media_data['media_type']
@@ -92,26 +101,32 @@ class IndexView(View):
 
         params['latest_media_id'] = latest_media_data['id']
         params['metric'] = 'engagement,impressions,reach,saved'
-        response = getMediaInsights(params)
-        insight_data = []
-        for insight in response['json_data']['data']:
-            insight_data.append(insight['values'][0]['value'])
+        media_response = getMediaInsights(params)
+        media_data = []
+        for media in media_response['json_data']['data']:
+            media_data.append(media['values'][0]['value'])
 
-        account_insight_data = Insight.objects.all().order_by("created")
+        media_insight_data = Insight.objects.all().order_by("label")
         follower_data = []
         follows_data = []
         ff_data = []
-        date_data = []
-        for data in account_insight_data:
+        label_data = []
+        for data in media_insight_data:
             follower_data.append(data.follower)
-            follows_data.append(data.follower)
-            ff = math.floor((data.follower / data.follower) * 100) / 100
+            follows_data.append(data.follows)
+            ff = math.floor((data.follower / data.follows) * 100) / 100
             ff_data.append(ff)
-            date_data.append(data.created)
+            label_data.append(data.label)
 
-        print(follower_count_data)
+        insight_data = {
+            'follower_data': follower_data,
+            'follows_data': follows_data,
+            'ff_data': ff_data,
+            'label_data': label_data,
+        }
 
         return render(request, 'app/index.html', {
+            'today': today.strftime('%Y-%m-%d'),
             'profile_picture_url': profile_picture_url,
             'username': username,
             'followers_count': followers_count,
@@ -123,11 +138,13 @@ class IndexView(View):
             'timestamp': timestamp,
             'like_count': like_count,
             'comments_count': comments_count,
-            'eng': insight_data[0],
-            'imp': insight_data[1],
-            'reach': insight_data[2],
-            'save': insight_data[3],
+            'eng': media_data[0],
+            'imp': media_data[1],
+            'reach': media_data[2],
+            'save': media_data[3],
+            'insight_data': json.dumps(insight_data)
         })
+
 
 # class IndexView(View):
 #     def get_insight_data(self, data):
@@ -163,51 +180,6 @@ class IndexView(View):
 #             'impressions_data': json.dumps(impressions_data),
 #             'reach_data': json.dumps(reach_data),
 #         })
-
-
-class InsightView(View):
-    def get(self, request, *args, **kwargs):
-        params = getCreds()
-        response = getUserMedia(params)
-        latest_data = response['json_data']['data'][0]
-        print(latest_data)
-        id = latest_data['id']
-        caption = latest_data['caption']
-        media_type = latest_data['media_type']
-        media_url = latest_data['media_url']
-        permalink = latest_data['permalink']
-        timestamp = localtime(datetime.datetime.strptime(latest_data['timestamp'], '%Y-%m-%dT%H:%M:%S%z'))
-        timestamp = timestamp.strftime('%Y/%m/%d %H:%M')
-        username = latest_data['username']
-        like_count = latest_data['like_count']
-        comments_count = latest_data['comments_count']
-
-        params['latest_media_id'] = id
-        if 'VIDEO' == latest_data['media_type']:
-            params['metric'] = 'engagement,impressions,reach,saved,video_views'
-        else:
-            params['metric'] = 'engagement,impressions,reach,saved'
-        response = getMediaInsights(params)
-
-        insight_data = []
-        for insight in response['json_data']['data']:
-            insight_data.append(insight['values'][0]['value'])
-
-        return render(request, 'app/insight.html', {
-            'id': id,
-            'caption': caption,
-            'media_type': media_type,
-            'media_url': media_url,
-            'permalink': permalink,
-            'timestamp': timestamp,
-            'username': username,
-            'like_count': like_count,
-            'comments_count': comments_count,
-            'eng': insight_data[0],
-            'imp': insight_data[1],
-            'reach': insight_data[2],
-            'save': insight_data[3],
-        })
 
 
 class HashView(View):
