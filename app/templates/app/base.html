@@ -29,18 +29,14 @@
 					<span>アカウント</span>
 				</a>
 			</li>
-			<li class="nav-item">
-				<a class="nav-link" href="{% url 'hash' %}">
-					<i class="fas fa-fw fa-cog"></i>
-					<span>ハッシュタグ</span>
-				</a>
-			</li>
 		</ul>
 
 		<div id="content-wrapper" class="d-flex flex-column">
 			<div id="content">
-				{% block content %}
-				{% endblock %}
+				<div class="container-fluid mt-3">
+					{% block content %}
+					{% endblock %}
+				</div>
 			</div>
             <footer class="sticky-footer bg-white mt-5">
 				<div class="container my-auto">

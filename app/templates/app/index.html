@@ -2,86 +2,93 @@
 
 {% block content %}
 
-<div class="container-fluid mt-3">
-    <h3>ダッシュボード</h3>
-    <div class="d-flex align-items-center justify-content-center flex-column">
-        <div class="profile_picture">
-            <img class="card-img-top rounded-circle" src="{{ profile_picture_url }}" alt="">
-        </div>
-        <h4 class="my-3">{{ username }}</h4>
+<h3 class="mb-3">ダッシュボード</h3>
+<div class="d-flex align-items-center justify-content-center flex-column">
+    <div class="profile_picture">
+        <img class="card-img-top rounded-circle" src="{{ profile_picture_url }}" alt="">
     </div>
-    <h4 class="mt-4">サマリー</h4>
-    <div class="card-columns">
-        <div class="card p-3">
-            <h5>フォロワー数</h5>
-            <div class="display-4">{{ followers_count }}</div>
-            <p>{{ today }}</p>
-        </div>
-        <div class="card p-3">
-            <h5>フォロー数</h5>
-            <div class="display-4">{{ follows_count }}</div>
-            <p>{{ today }}</p>
-        </div>
-        <div class="card p-3">
-            <h5>投稿数</h5>
-            <div class="display-4">{{ media_count }}</div>
-            <p>{{ today }}</p>
-        </div>
-    </div>
-
-    <h4 class="mt-4">推移</h4>
-    <div class="card-columns">
-        <div class="card p-3">
-            <canvas id="follower_count_chart"></canvas>
-        </div>
-        <div class="card p-3">
-            <canvas id="follows_count_chart"></canvas>
-        </div>
-        <div class="card p-3">
-            <canvas id="ff_chart"></canvas>
-        </div>
-    </div>
-
-    <h4 class="mt-4">最新投稿</h4>
+    <h4 class="my-3">{{ username }}</h4>
+</div>
+<h4 class="mt-4">サマリー</h4>
+<div class="card-columns">
     <div class="card p-3">
-        <div class="row">
-            <div class="col-md-4">
-                <a href="{{ permalink }}">
-                    <img class="card-img-top" src="{{ media_url }}" alt="">
-                </a>
+        <h5>フォロワー数</h5>
+        <div class="display-4">{{ followers_count }}</div>
+        <p>{{ today }}</p>
+    </div>
+    <div class="card p-3">
+        <h5>フォロー数</h5>
+        <div class="display-4">{{ follows_count }}</div>
+        <p>{{ today }}</p>
+    </div>
+    <div class="card p-3">
+        <h5>投稿数</h5>
+        <div class="display-4">{{ media_count }}</div>
+        <p>{{ today }}</p>
+    </div>
+</div>
+
+<h4 class="mt-4">ユーザー推移</h4>
+<div class="card-columns">
+    <div class="card p-3">
+        <canvas id="follower_count_chart"></canvas>
+    </div>
+    <div class="card p-3">
+        <canvas id="follows_count_chart"></canvas>
+    </div>
+    <div class="card p-3">
+        <canvas id="ff_chart"></canvas>
+    </div>
+</div>
+
+<h4 class="mt-4">投稿推移</h4>
+<div class="card p-3">
+    <canvas id="post_chart"></canvas>
+</div>
+
+
+<h4 class="mt-4">最新投稿</h4>
+<div class="card p-3">
+    <div class="row">
+        <div class="col-md-4">
+            <a href="{{ permalink }}">
+                <img class="card-img-top" src="{{ media_url }}" alt="">
+            </a>
+        </div>
+        <div class="col-md-8">
+            <div class="mb-3">
+                <td>{{ caption|linebreaksbr }}</td>
             </div>
-            <div class="col-md-8">
-                <table class="table table-sm">
-                    <tr>
-                        <td>投稿日</td>
-                        <td>{{ timestamp }}</td>
-                    </tr>
-                    <tr>
-                        <td>インプレッション</td>
-                        <td>{{ imp }}</td>
-                    </tr>
-                    <tr>
-                        <td>リーチ数</td>
-                        <td>{{ reach }}</td>
-                    </tr>
-                    <tr>
-                        <td>いいね数</td>
-                        <td>{{ like_count }}</td>
-                    </tr>
-                    <tr>
-                        <td>コメント数</td>
-                        <td>{{ comments_count }}</td>
-                    </tr>
-                    <tr>
-                        <td>保存数</td>
-                        <td>{{ save }}</td>
-                    </tr>
-                    <tr>
-                        <td>エンゲージメント</td>
-                        <td>{{ eng }}</td>
-                    </tr>
-                </table>
-            </div>
+            <table class="table table-sm">
+                <tr>
+                    <td>投稿日</td>
+                    <td>{{ timestamp }}</td>
+                </tr>
+                <tr>
+                    <td>インプレッション</td>
+                    <td>{{ imp }}</td>
+                </tr>
+                <tr>
+                    <td>リーチ数</td>
+                    <td>{{ reach }}</td>
+                </tr>
+                <tr>
+                    <td>いいね数</td>
+                    <td>{{ like_count }}</td>
+                </tr>
+                <tr>
+                    <td>コメント数</td>
+                    <td>{{ comments_count }}</td>
+                </tr>
+                <tr>
+                    <td>保存数</td>
+                    <td>{{ save }}</td>
+                </tr>
+                <tr>
+                    <td>エンゲージメント</td>
+                    <td>{{ eng }}</td>
+                </tr>
+            </table>
         </div>
     </div>
 </div>
@@ -101,8 +108,8 @@
                 {
                     label: 'フォロワー数',
                     data: insight_data.follower_data,
-                    borderColor: "#EC6D64",
-                    backgroundColor: "#EC6D64",
+                    borderColor: "rgba(207,46,146,0.5)",
+                    backgroundColor: "rgba(207,46,146,0.5)",
                 }
             ],
         },
@@ -111,7 +118,7 @@
                 line: {
                     tension: 0,
                 },
-                point:{
+                point: {
                     radius: 2
                 }
             }
@@ -127,8 +134,8 @@
                 {
                     label: 'フォロー数',
                     data: insight_data.follows_data,
-                    borderColor: "#EC6D64",
-                    backgroundColor: "#EC6D64",
+                    borderColor: "rgba(207,46,146,0.5)",
+                    backgroundColor: "rgba(207,46,146,0.5)",
                 }
             ],
         },
@@ -137,7 +144,7 @@
                 line: {
                     tension: 0,
                 },
-                point:{
+                point: {
                     radius: 2
                 }
             }
@@ -153,8 +160,8 @@
                 {
                     label: 'フォロー・フォロワー比率',
                     data: insight_data.ff_data,
-                    borderColor: "#EC6D64",
-                    backgroundColor: "#EC6D64",
+                    borderColor: "rgba(207,46,146,0.5)",
+                    backgroundColor: "rgba(207,46,146,0.5)",
                 }
             ],
         },
@@ -163,11 +170,37 @@
                 line: {
                     tension: 0,
                 },
-                point:{
+                point: {
                     radius: 2
                 }
             }
         }
+    });
+
+    const post_ctx = document.getElementById("post_chart");
+    const post = new Chart(post_ctx, {
+        type: 'bar',
+        data: {
+            labels: insight_data.post_label_data,
+            datasets: [
+                {
+                    label: '投稿数',
+                    data: insight_data.count_data,
+                    backgroundColor: "rgba(207,46,146,0.5)"
+                },
+                {
+                    label: 'いいね数',
+                    data: insight_data.like_data,
+                    backgroundColor: "rgba(207,105,57,0.5)"
+                },
+                {
+                    label: 'コメント数',
+                    data: insight_data.comments_data,
+                    backgroundColor: "rgba(255,221,131,0.5)"
+                }
+            ]
+        },
+        options: {}
     });
 </script>
 

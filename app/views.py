@@ -1,11 +1,11 @@
 from django.views.generic import View
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import requests
 import json
 import datetime
 from django.utils.timezone import localtime
 from django.conf import settings
-from .models import Insight
+from .models import Insight, Post
 import math
 
 
@@ -69,6 +69,25 @@ def getMediaInsights(params):
     return makeApiCall(url, endpointParams)
 
 
+def getHashtagInfo(params):
+    endpointParams = dict()
+    endpointParams['user_id'] = params['instagram_account_id']
+    endpointParams['q'] = params['hashtag_name']
+    endpointParams['fields'] = 'id,name'
+    endpointParams['access_token'] = params['access_token']
+    url = params['endpoint_base'] + 'ig_hashtag_search'
+    return makeApiCall(url, endpointParams)
+
+
+def getHashtagMedia(params):
+    endpointParams = dict()
+    endpointParams['user_id'] = params['instagram_account_id']
+    endpointParams['fields'] = 'id,children,caption,name,comment_count,like_count,media_type,media_url,permalink'
+    endpointParams['access_token'] = params['access_token']
+    url = params['endpoint_base'] + params['hashtag_id'] + '/' + params['type']
+    return makeApiCall(url, endpointParams)
+
+
 class IndexView(View):
     def get(self, request, *args, **kwargs):
         params = getCreds()
@@ -79,6 +98,7 @@ class IndexView(View):
         followers_count = account_data['followers_count']
         follows_count = account_data['follows_count']
         media_count = account_data['media_count']
+        media_data =  account_data['media']['data']
 
         today = datetime.date.today()
         obj, created = Insight.objects.update_or_create(
@@ -88,6 +108,31 @@ class IndexView(View):
                 'follows': follows_count,
             }
         )
+
+        like = 0
+        comments = 0
+        count = 1
+        post_timestamp = ''
+        for i in range(10):
+            timestamp = localtime(datetime.datetime.strptime(media_data[i]['timestamp'], '%Y-%m-%dT%H:%M:%S%z'))
+            timestamp = timestamp.strftime('%Y-%m-%d')
+            if post_timestamp == timestamp:
+                like += media_data[i]['like_count']
+                comments += media_data[i]['comments_count']
+                count += 1
+            else:
+                like = media_data[i]['like_count']
+                comments = media_data[i]['comments_count']
+                post_timestamp = timestamp
+
+            obj, created = Post.objects.update_or_create(
+                label=timestamp,
+                defaults={
+                    'like': like,
+                    'comments': comments,
+                    'count': count,
+                }
+            )
 
         latest_media_data = account_data['media']['data'][0]
         caption = latest_media_data['caption']
@@ -118,11 +163,26 @@ class IndexView(View):
             ff_data.append(ff)
             label_data.append(data.label)
 
+        post_data = Post.objects.all().order_by("label")
+        like_data = []
+        comments_data = []
+        count_data = []
+        post_label_data = []
+        for data in post_data:
+            like_data.append(data.like)
+            comments_data.append(data.comments)
+            count_data.append(data.count)
+            post_label_data.append(data.label)
+
         insight_data = {
             'follower_data': follower_data,
             'follows_data': follows_data,
             'ff_data': ff_data,
             'label_data': label_data,
+            'like_data': like_data,
+            'comments_data': comments_data,
+            'count_data': count_data,
+            'post_label_data': post_label_data,
         }
 
         return render(request, 'app/index.html', {
@@ -145,43 +205,3 @@ class IndexView(View):
             'insight_data': json.dumps(insight_data)
         })
 
-
-# class IndexView(View):
-#     def get_insight_data(self, data):
-#         insight_val = []
-#         insight_time = []
-#         for insight in data['values']:
-#             insight_val.append(insight['value'])
-#             end_time = localtime(datetime.datetime.strptime(insight['end_time'], '%Y-%m-%dT%H:%M:%S%z'))
-#             insight_time.append(end_time.strftime('%Y/%m/%d'))
-#         insight_data = {
-#             'val': insight_val,
-#             'time': insight_time
-#         }
-#         return insight_data
-
-#     def get(self, request, *args, **kwargs):
-#         params = getCreds()
-#         account_response = getAccountInfo(params)
-#         account_data = account_response['json_data']['business_discovery']
-
-#         user_insight_response_day = getUserInsights(params, 'day')
-#         follower_count_data = self.get_insight_data(user_insight_response_day['json_data']['data'][0])
-#         profile_views_data = self.get_insight_data(user_insight_response_day['json_data']['data'][1])
-
-#         user_insight_response_week = getUserInsights(params, 'week')
-#         impressions_data = self.get_insight_data(user_insight_response_week['json_data']['data'][0])
-#         reach_data = self.get_insight_data(user_insight_response_week['json_data']['data'][1])
-
-#         return render(request, 'app/index.html', {
-#             'account_data': account_data,
-#             'follower_count_data': json.dumps(follower_count_data),
-#             'profile_views_data': json.dumps(profile_views_data),
-#             'impressions_data': json.dumps(impressions_data),
-#             'reach_data': json.dumps(reach_data),
-#         })
-
-
-class HashView(View):
-    def get(self, request, *args, **kwargs):
-        return render(request, 'app/hash.html')
