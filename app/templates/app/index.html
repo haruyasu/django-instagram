@@ -5,25 +5,25 @@
 <h3 class="mb-3">ダッシュボード</h3>
 <div class="d-flex align-items-center justify-content-center flex-column">
     <div class="profile_picture">
-        <img class="card-img-top rounded-circle" src="{{ profile_picture_url }}" alt="">
+        <img class="card-img-top rounded-circle" src="{{ account_data.profile_picture_url }}" alt="">
     </div>
-    <h4 class="my-3">{{ username }}</h4>
+    <h4 class="my-3">{{ account_data.username }}</h4>
 </div>
 <h4 class="mt-4">サマリー</h4>
 <div class="card-columns">
     <div class="card p-3">
         <h5>フォロワー数</h5>
-        <div class="display-4">{{ followers_count }}</div>
+        <div class="display-4">{{ account_data.followers_count }}</div>
         <p>{{ today }}</p>
     </div>
     <div class="card p-3">
         <h5>フォロー数</h5>
-        <div class="display-4">{{ follows_count }}</div>
+        <div class="display-4">{{ account_data.follows_count }}</div>
         <p>{{ today }}</p>
     </div>
     <div class="card p-3">
         <h5>投稿数</h5>
-        <div class="display-4">{{ media_count }}</div>
+        <div class="display-4">{{ account_data.media_count }}</div>
         <p>{{ today }}</p>
     </div>
 </div>
@@ -51,42 +51,42 @@
 <div class="card p-3">
     <div class="row">
         <div class="col-md-4">
-            <a href="{{ permalink }}">
-                <img class="card-img-top" src="{{ media_url }}" alt="">
+            <a href="{{ insight_media_data.permalink }}">
+                <img class="card-img-top" src="{{ insight_media_data.media_url }}" alt="">
             </a>
         </div>
         <div class="col-md-8">
             <div class="mb-3">
-                <td>{{ caption|linebreaksbr }}</td>
+                <td>{{ insight_media_data.caption|linebreaksbr }}</td>
             </div>
             <table class="table table-sm">
                 <tr>
                     <td>投稿日</td>
-                    <td>{{ timestamp }}</td>
+                    <td>{{ insight_media_data.timestamp }}</td>
                 </tr>
                 <tr>
                     <td>インプレッション</td>
-                    <td>{{ imp }}</td>
+                    <td>{{ insight_media_data.impression }}</td>
                 </tr>
                 <tr>
                     <td>リーチ数</td>
-                    <td>{{ reach }}</td>
+                    <td>{{ insight_media_data.reach }}</td>
                 </tr>
                 <tr>
                     <td>いいね数</td>
-                    <td>{{ like_count }}</td>
+                    <td>{{ insight_media_data.like_count }}</td>
                 </tr>
                 <tr>
                     <td>コメント数</td>
-                    <td>{{ comments_count }}</td>
+                    <td>{{ insight_media_data.comments_count }}</td>
                 </tr>
                 <tr>
                     <td>保存数</td>
-                    <td>{{ save }}</td>
+                    <td>{{ insight_media_data.save }}</td>
                 </tr>
                 <tr>
                     <td>エンゲージメント</td>
-                    <td>{{ eng }}</td>
+                    <td>{{ insight_media_data.engagement }}</td>
                 </tr>
             </table>
         </div>
