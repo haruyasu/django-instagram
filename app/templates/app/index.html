@@ -118,10 +118,12 @@
                 line: {
                     tension: 0,
                 },
-                point: {
-                    radius: 2
-                }
-            }
+            },
+            tooltips: {
+                mode: 'nearest',
+                intersect: false,
+            },
+            responsive: true,
         }
     });
 
@@ -144,10 +146,12 @@
                 line: {
                     tension: 0,
                 },
-                point: {
-                    radius: 2
-                }
-            }
+            },
+            tooltips: {
+                mode: 'nearest',
+                intersect: false,
+            },
+            responsive: true,
         }
     });
 
@@ -170,10 +174,12 @@
                 line: {
                     tension: 0,
                 },
-                point: {
-                    radius: 2
-                }
-            }
+            },
+            tooltips: {
+                mode: 'nearest',
+                intersect: false,
+            },
+            responsive: true,
         }
     });
 
@@ -186,12 +192,12 @@
                 {
                     label: '投稿数',
                     data: insight_data.count_data,
-                    backgroundColor: "rgba(207,46,146,0.5)"
+                    backgroundColor: "rgba(207,105,57,0.5)"
                 },
                 {
                     label: 'いいね数',
                     data: insight_data.like_data,
-                    backgroundColor: "rgba(207,105,57,0.5)"
+                    backgroundColor: "rgba(207,46,146,0.5)"
                 },
                 {
                     label: 'コメント数',
@@ -200,7 +206,13 @@
                 }
             ]
         },
-        options: {}
+        options: {
+            tooltips: {
+                mode: 'nearest',
+                intersect: false,
+            },
+            responsive: true,
+        }
     });
 </script>
 
