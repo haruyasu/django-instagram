@@ -33,7 +33,7 @@ def call_api(url, endpoint_params):
 # ユーザーアカウント情報取得
 def get_account_info(params):
     # エンドポイント
-    # https://graph.facebook.com/{graph-api-version}/{ig-user-id}?fields=business_discovery.username({ig-username}){username,website,name,ig_id,id,profile_picture_url,biography,follows_count,followers_count,media_count}&access_token={access-token}
+    # https://graph.facebook.com/{graph-api-version}/{ig-user-id}?fields={fields}&access_token={access-token}
 
     endpoint_params = dict()
     # ユーザ名、プロフィール画像、フォロワー数、フォロー数、投稿数、メディア情報取得
@@ -56,6 +56,33 @@ def get_media_insights(params):
     endpoint_params['access_token'] = params['access_token']
     url = params['endpoint_base'] + params['media_id'] + '/insights'
     return call_api(url, endpoint_params)
+
+
+# ハッシュタグ検索
+def get_hashtag_id(params):
+    # エンドポイント
+    # https://graph.facebook.com/{graph-api-version}/ig_hashtag_search?user_id={user-id}&q={hashtag-name}&fields={fields}&access_token={access-token}
+
+	endpoint_params = dict()
+	endpoint_params['user_id'] = params['instagram_account_id']
+    # 指定ハッシュタグ
+	endpoint_params['q'] = params['hashtag_name']
+	endpoint_params['fields'] = 'id,name'
+	endpoint_params['access_token'] = params['access_token']
+	url = params['endpoint_base'] + 'ig_hashtag_search'
+	return call_api(url, endpoint_params)
+
+
+def get_hashtag_media(params):
+    # エンドポイント 評価順
+    # https://graph.facebook.com/{graph-api-version}/{ig-hashtag-id}/top_media?user_id={user-id}&fields={fields}
+
+	endpoint_params = dict()
+	endpoint_params['user_id'] = params['instagram_account_id']
+	endpoint_params['fields'] = 'id,media_type,media_url,children{media_url},permalink,caption,like_count,comments_count,timestamp'
+	endpoint_params['access_token'] = params['access_token']
+	url = params['endpoint_base'] + params['hashtag_id'] + '/top_media'
+	return call_api(url, endpoint_params)
 
 
 class IndexView(View):
@@ -184,4 +211,29 @@ class IndexView(View):
             'account_data': account_data,
             'insight_data': json.dumps(insight_data),
             'insight_media_data': insight_media_data,
+        })
+
+class HashtagView(View):
+    def get(self, request, *args, **kwargs):
+        # Instagram Graph API認証情報取得
+        params = get_credentials()
+
+        # ハッシュタグ設定
+        params['hashtag_name'] = 'デイトラ'
+
+        # ハッシュタグID取得
+        hashtag_id_respinse = get_hashtag_id(params)
+
+        # ハッシュタグID設定
+        params['hashtag_id'] = hashtag_id_respinse['json_data']['data'][0]['id'];
+
+        # ハッシュタグ検索
+        hashtag_media_response = get_hashtag_media(params)
+
+
+        print(hashtag_media_response)
+
+
+        return render(request, 'app/hashtag.html', {
+
         })
