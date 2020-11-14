@@ -23,9 +23,13 @@ def get_credentials():
 
 
 # Instagram Graph APIコール
-def call_api(url, endpoint_params):
+def call_api(url, endpoint_params=''):
     # API送信
-    data = requests.get(url, endpoint_params)
+    if endpoint_params:
+        data = requests.get(url, endpoint_params)
+    else:
+        data = requests.get(url)
+
     response = {}
     # API送信結果をjson形式で保存
     response['json_data'] = json.loads(data.content)
@@ -64,27 +68,26 @@ def get_hashtag_id(params):
     # エンドポイント
     # https://graph.facebook.com/{graph-api-version}/ig_hashtag_search?user_id={user-id}&q={hashtag-name}&fields={fields}&access_token={access-token}
 
-	endpoint_params = {}
-	endpoint_params['user_id'] = params['instagram_account_id']
+    endpoint_params = {}
+    endpoint_params['user_id'] = params['instagram_account_id']
     # 指定ハッシュタグ
-	endpoint_params['q'] = params['hashtag_name']
-	endpoint_params['fields'] = 'id,name'
-	endpoint_params['access_token'] = params['access_token']
-	url = params['endpoint_base'] + 'ig_hashtag_search'
-	return call_api(url, endpoint_params)
+    endpoint_params['q'] = params['hashtag_name']
+    endpoint_params['fields'] = 'id,name'
+    endpoint_params['access_token'] = params['access_token']
+    url = params['endpoint_base'] + 'ig_hashtag_search'
+    return call_api(url, endpoint_params)
 
 
 def get_hashtag_media(params):
     # エンドポイント
-    # https://graph.facebook.com/{graph-api-version}/{ig-hashtag-id}/top_media?user_id={user-id}&fields={fields}
     # https://graph.facebook.com/{graph-api-version}/{ig-hashtag-id}/recent_media?user_id={user-id}&fields={fields}
 
-	endpoint_params = {}
-	endpoint_params['user_id'] = params['instagram_account_id']
-	endpoint_params['fields'] = 'id,media_type,media_url,children{media_url},permalink,caption,like_count,comments_count,timestamp'
-	endpoint_params['access_token'] = params['access_token']
-	url = params['endpoint_base'] + params['hashtag_id'] + '/' + params['type']
-	return call_api(url, endpoint_params)
+    endpoint_params = {}
+    endpoint_params['user_id'] = params['instagram_account_id']
+    endpoint_params['fields'] = 'id,media_type,media_url,children{media_url,media_type},permalink,caption,like_count,comments_count,timestamp'
+    endpoint_params['access_token'] = params['access_token']
+    url = params['endpoint_base'] + params['hashtag_id'] + '/recent_media'
+    return call_api(url, endpoint_params)
 
 
 class IndexView(View):
@@ -216,16 +219,40 @@ class IndexView(View):
         })
 
 class HashtagView(View):
+    # メディアのリストを作成
+    def get_media_list(self, hashtag_media_response, hashtag_media_list):
+        for item in hashtag_media_response['json_data']['data']:
+            # カルーセルの場合は一番最初のメディアを取得
+            if item['media_type'] == 'CAROUSEL_ALBUM':
+                media_url = item['children']['data'][0]['media_url']
+                if item['children']['data'][0]['media_type'] == 'VIDEO':
+                    media_type = 'VIDEO'
+                else:
+                    media_type = 'IMAGE'
+            else:
+                media_url = item['media_url']
+                media_type = item['media_type']
+
+            # 投稿日
+            timestamp = localtime(datetime.strptime(item['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y-%m-%d')
+
+            hashtag_media_list.append([
+                media_type,
+                media_url,
+                item['permalink'],
+                item['caption'],
+                item['like_count'],
+                item['comments_count'],
+                timestamp,
+            ])
+        return hashtag_media_list
+
     def get(self, request, *args, **kwargs):
         # Instagram Graph API認証情報取得
         params = get_credentials()
 
         # ハッシュタグ設定
-        params['hashtag_name'] = 'コーラ'
-
-        # 検索順
-        params['type'] = 'recent_media'
-        params['type'] = 'top_media'
+        params['hashtag_name'] = 'デイトラ'
 
         # ハッシュタグID取得
         hashtag_id_respinse = get_hashtag_id(params)
@@ -237,24 +264,25 @@ class HashtagView(View):
         hashtag_media_response = get_hashtag_media(params)
 
         hashtag_media_list = []
-        for item in hashtag_media_response['json_data']['data']:
-            if item['media_type'] == 'CAROUSEL_ALBUM':
-                media_url = item['children']['data'][0]['media_url']
+
+        # メディアのリストを作成
+        hashtag_media_list = self.get_media_list(hashtag_media_response, hashtag_media_list)
+
+        # 次のデータが存在するまで繰り返す
+        while True:
+            # 次のデータが存在しない場合はbreak
+            if not hashtag_media_response['json_data'].get('paging'):
+                break
+            next_url = hashtag_media_response['json_data']['paging']['next']
+            hashtag_data = hashtag_media_response['json_data']['data']
+            if hashtag_data and next_url:
+                # 次のデータを取得
+                hashtag_media_response = call_api(next_url)
+                # メディアのリストを作成
+                hashtag_media_list = self.get_media_list(hashtag_media_response, hashtag_media_list)
             else:
-                media_url = item['media_url']
-
-            # 投稿日
-            timestamp = localtime(datetime.strptime(item['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y-%m-%d')
-
-            hashtag_media_list.append([
-                item['media_type'],
-                media_url,
-                item['permalink'],
-                item['caption'],
-                item['like_count'],
-                item['comments_count'],
-                timestamp,
-            ])
+                # 次のデータが存在しない場合はbreak
+                break
 
         # データフレームの作成
         hashtag_media_data = pd.DataFrame(hashtag_media_list, columns=[
@@ -266,6 +294,9 @@ class HashtagView(View):
             'comments_count',
             'timestamp',
         ])
+
+        # いいね数、コメント数順で並び替え
+        hashtag_media_data = hashtag_media_data.sort_values(['like_count', 'comments_count'], ascending=[False, False])
 
         return render(request, 'app/hashtag.html', {
             'hashtag_media_data': hashtag_media_data,
