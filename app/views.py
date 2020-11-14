@@ -1,17 +1,18 @@
 from django.views.generic import View
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 import requests
 import json
-import datetime
+from datetime import datetime, date
 from django.utils.timezone import localtime
 from django.conf import settings
 from .models import Insight, Post
 import math
+import pandas as pd
 
 
 # Instagram Graph API認証情報
 def get_credentials():
-    credentials = dict()
+    credentials = {}
     credentials['access_token'] = settings.ACCESS_TOKEN
     credentials['instagram_account_id'] = settings.INSTAGRAM_ACCOUNT_ID
     credentials['graph_domain'] = 'https://graph.facebook.com/'
@@ -25,7 +26,7 @@ def get_credentials():
 def call_api(url, endpoint_params):
     # API送信
     data = requests.get(url, endpoint_params)
-    response = dict()
+    response = {}
     # API送信結果をjson形式で保存
     response['json_data'] = json.loads(data.content)
     return response
@@ -35,7 +36,7 @@ def get_account_info(params):
     # エンドポイント
     # https://graph.facebook.com/{graph-api-version}/{ig-user-id}?fields={fields}&access_token={access-token}
 
-    endpoint_params = dict()
+    endpoint_params = {}
     # ユーザ名、プロフィール画像、フォロワー数、フォロー数、投稿数、メディア情報取得
     endpoint_params['fields'] = 'business_discovery.username(' + params['ig_username'] + '){\
         username,profile_picture_url,follows_count,followers_count,media_count,\
@@ -50,7 +51,7 @@ def get_media_insights(params):
     # エンドポイント
     # https://graph.facebook.com/{graph-api-version}/{ig-media-id}/insights?metric={metric}&access_token={access-token}
 
-    endpoint_params = dict()
+    endpoint_params = {}
     # エンゲージメント、インプレッション、リーチ、保存情報取得
     endpoint_params['metric'] = 'engagement,impressions,reach,saved'
     endpoint_params['access_token'] = params['access_token']
@@ -63,7 +64,7 @@ def get_hashtag_id(params):
     # エンドポイント
     # https://graph.facebook.com/{graph-api-version}/ig_hashtag_search?user_id={user-id}&q={hashtag-name}&fields={fields}&access_token={access-token}
 
-	endpoint_params = dict()
+	endpoint_params = {}
 	endpoint_params['user_id'] = params['instagram_account_id']
     # 指定ハッシュタグ
 	endpoint_params['q'] = params['hashtag_name']
@@ -74,14 +75,15 @@ def get_hashtag_id(params):
 
 
 def get_hashtag_media(params):
-    # エンドポイント 評価順
+    # エンドポイント
     # https://graph.facebook.com/{graph-api-version}/{ig-hashtag-id}/top_media?user_id={user-id}&fields={fields}
+    # https://graph.facebook.com/{graph-api-version}/{ig-hashtag-id}/recent_media?user_id={user-id}&fields={fields}
 
-	endpoint_params = dict()
+	endpoint_params = {}
 	endpoint_params['user_id'] = params['instagram_account_id']
 	endpoint_params['fields'] = 'id,media_type,media_url,children{media_url},permalink,caption,like_count,comments_count,timestamp'
 	endpoint_params['access_token'] = params['access_token']
-	url = params['endpoint_base'] + params['hashtag_id'] + '/top_media'
+	url = params['endpoint_base'] + params['hashtag_id'] + '/' + params['type']
 	return call_api(url, endpoint_params)
 
 
@@ -101,7 +103,7 @@ class IndexView(View):
         }
 
         # 本日の日付
-        today = datetime.date.today()
+        today = date.today()
         # Insightデーターベースに保存
         obj, created = Insight.objects.update_or_create(
             label=today,
@@ -136,7 +138,7 @@ class IndexView(View):
         post_timestamp = ''
         for data in business_discovery['media']['data']:
             # 投稿日取得
-            timestamp = localtime(datetime.datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y-%m-%d')
+            timestamp = localtime(datetime.strptime(data['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y-%m-%d')
             # 同じ日に複数の投稿がある場合、各データを足していく
             if post_timestamp == timestamp:
                 like += data['like_count']
@@ -197,7 +199,7 @@ class IndexView(View):
             'caption': latest_media_data['caption'],
             'media_url': latest_media_data['media_url'],
             'permalink': latest_media_data['permalink'],
-            'timestamp': localtime(datetime.datetime.strptime(latest_media_data['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y/%m/%d %H:%M'),
+            'timestamp': localtime(datetime.strptime(latest_media_data['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y/%m/%d %H:%M'),
             'like_count': latest_media_data['like_count'],
             'comments_count': latest_media_data['comments_count'],
             'engagement': media_data[0]['values'][0]['value'],
@@ -219,7 +221,11 @@ class HashtagView(View):
         params = get_credentials()
 
         # ハッシュタグ設定
-        params['hashtag_name'] = 'デイトラ'
+        params['hashtag_name'] = 'コーラ'
+
+        # 検索順
+        params['type'] = 'recent_media'
+        params['type'] = 'top_media'
 
         # ハッシュタグID取得
         hashtag_id_respinse = get_hashtag_id(params)
@@ -230,10 +236,37 @@ class HashtagView(View):
         # ハッシュタグ検索
         hashtag_media_response = get_hashtag_media(params)
 
+        hashtag_media_list = []
+        for item in hashtag_media_response['json_data']['data']:
+            if item['media_type'] == 'CAROUSEL_ALBUM':
+                media_url = item['children']['data'][0]['media_url']
+            else:
+                media_url = item['media_url']
 
-        print(hashtag_media_response)
+            # 投稿日
+            timestamp = localtime(datetime.strptime(item['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y-%m-%d')
 
+            hashtag_media_list.append([
+                item['media_type'],
+                media_url,
+                item['permalink'],
+                item['caption'],
+                item['like_count'],
+                item['comments_count'],
+                timestamp,
+            ])
+
+        # データフレームの作成
+        hashtag_media_data = pd.DataFrame(hashtag_media_list, columns=[
+            'media_type',
+            'media_url',
+            'permalink',
+            'caption',
+            'like_count',
+            'comments_count',
+            'timestamp',
+        ])
 
         return render(request, 'app/hashtag.html', {
-
+            'hashtag_media_data': hashtag_media_data,
         })

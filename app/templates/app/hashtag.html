@@ -4,4 +4,35 @@
 
 <p>ハッシュタグ検索</p>
 
+<div class="row">
+    {% for index, row in hashtag_media_data.iterrows %}
+        <div class="col-sm-3 mb-2">
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <a href="{{ row.permalink }}" target="_blank">
+                            {% if row.media_type == 'VIDEO' %}
+                                <div class="embed-responsive embed-responsive-1by1 mb-3">
+                                    <iframe class="embed-responsive-item" src="{{ row.media_url }}" allowfullscreen></iframe>
+                                </div>
+                            {% else %}
+                                <div class="media_image">
+                                    <img src="{{ row.media_url }}" class="img card-img-top" alt="">
+                                </div>
+                            {% endif %}
+                        </a>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <i class="fas fa-heart text-secondary mr-2"></i><span class="mr-3">{{ row.like_count }}</span>
+                            <i class="fas fa-comment text-secondary mr-2"></i><span>{{ row.comments_count }}</span>
+                        </div>
+                        <div>{{ row.timestamp }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
 {% endblock %}

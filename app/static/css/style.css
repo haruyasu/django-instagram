@@ -123,6 +123,16 @@
     width: 200px;
 }
 
+.media_image {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 100%;
+}
+
+.media_image img {
+    position: absolute;
+}
+
 footer.sticky-footer {
     padding: 2rem 0;
     flex-shrink: 0;
