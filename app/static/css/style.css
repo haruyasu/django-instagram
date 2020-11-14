@@ -133,6 +133,10 @@
     position: absolute;
 }
 
+.search-table {
+    max-width: 800px;
+}
+
 footer.sticky-footer {
     padding: 2rem 0;
     flex-shrink: 0;

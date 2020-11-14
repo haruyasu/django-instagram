@@ -1,11 +1,12 @@
 from django.views.generic import View
 from django.shortcuts import render, redirect
-import requests
-import json
 from datetime import datetime, date
 from django.utils.timezone import localtime
 from django.conf import settings
 from .models import Insight, Post
+from .forms import HashtagForm
+import requests
+import json
 import math
 import pandas as pd
 
@@ -230,7 +231,10 @@ class HashtagView(View):
                 else:
                     media_type = 'IMAGE'
             else:
-                media_url = item['media_url']
+                try:
+                    media_url = item['media_url']
+                except KeyError:
+                    media_url = 'http://placehold.jp/500x500.png?text=None'
                 media_type = item['media_type']
 
             # 投稿日
@@ -240,7 +244,6 @@ class HashtagView(View):
                 media_type,
                 media_url,
                 item['permalink'],
-                item['caption'],
                 item['like_count'],
                 item['comments_count'],
                 timestamp,
@@ -248,56 +251,73 @@ class HashtagView(View):
         return hashtag_media_list
 
     def get(self, request, *args, **kwargs):
-        # Instagram Graph API認証情報取得
-        params = get_credentials()
+        # 検索フォーム
+        form = HashtagForm(request.POST or None)
 
-        # ハッシュタグ設定
-        params['hashtag_name'] = 'デイトラ'
-
-        # ハッシュタグID取得
-        hashtag_id_respinse = get_hashtag_id(params)
-
-        # ハッシュタグID設定
-        params['hashtag_id'] = hashtag_id_respinse['json_data']['data'][0]['id'];
-
-        # ハッシュタグ検索
-        hashtag_media_response = get_hashtag_media(params)
-
-        hashtag_media_list = []
-
-        # メディアのリストを作成
-        hashtag_media_list = self.get_media_list(hashtag_media_response, hashtag_media_list)
-
-        # 次のデータが存在するまで繰り返す
-        while True:
-            # 次のデータが存在しない場合はbreak
-            if not hashtag_media_response['json_data'].get('paging'):
-                break
-            next_url = hashtag_media_response['json_data']['paging']['next']
-            hashtag_data = hashtag_media_response['json_data']['data']
-            if hashtag_data and next_url:
-                # 次のデータを取得
-                hashtag_media_response = call_api(next_url)
-                # メディアのリストを作成
-                hashtag_media_list = self.get_media_list(hashtag_media_response, hashtag_media_list)
-            else:
-                # 次のデータが存在しない場合はbreak
-                break
-
-        # データフレームの作成
-        hashtag_media_data = pd.DataFrame(hashtag_media_list, columns=[
-            'media_type',
-            'media_url',
-            'permalink',
-            'caption',
-            'like_count',
-            'comments_count',
-            'timestamp',
-        ])
-
-        # いいね数、コメント数順で並び替え
-        hashtag_media_data = hashtag_media_data.sort_values(['like_count', 'comments_count'], ascending=[False, False])
-
-        return render(request, 'app/hashtag.html', {
-            'hashtag_media_data': hashtag_media_data,
+        return render(request, 'app/search.html', {
+            'form': form
         })
+
+    def post(self, request, *args, **kwargs):
+        form = HashtagForm(request.POST or None)
+
+        # フォームのバリデーション
+        if form.is_valid():
+            # フォームからデータを取得
+            hashtag = form.cleaned_data['hashtag']
+
+            # Instagram Graph API認証情報取得
+            params = get_credentials()
+
+            # ハッシュタグ設定
+            params['hashtag_name'] = hashtag
+
+            # ハッシュタグID取得
+            hashtag_id_respinse = get_hashtag_id(params)
+
+            # ハッシュタグID設定
+            params['hashtag_id'] = hashtag_id_respinse['json_data']['data'][0]['id'];
+
+            # ハッシュタグ検索
+            hashtag_media_response = get_hashtag_media(params)
+
+            hashtag_media_list = []
+
+            # メディアのリストを作成
+            hashtag_media_list = self.get_media_list(hashtag_media_response, hashtag_media_list)
+
+            # 次のデータが存在するまで繰り返す
+            while True:
+                # 次のデータが存在しない場合はbreak
+                if not hashtag_media_response['json_data'].get('paging'):
+                    break
+                next_url = hashtag_media_response['json_data']['paging']['next']
+                hashtag_data = hashtag_media_response['json_data']['data']
+                if hashtag_data and next_url:
+                    # 次のデータを取得
+                    hashtag_media_response = call_api(next_url)
+                    # メディアのリストを作成
+                    hashtag_media_list = self.get_media_list(hashtag_media_response, hashtag_media_list)
+                else:
+                    # 次のデータが存在しない場合はbreak
+                    break
+
+            # データフレームの作成
+            hashtag_media_data = pd.DataFrame(hashtag_media_list, columns=[
+                'media_type',
+                'media_url',
+                'permalink',
+                'like_count',
+                'comments_count',
+                'timestamp',
+            ])
+
+            # いいね数、コメント数順で並び替え
+            hashtag_media_data = hashtag_media_data.sort_values(['like_count', 'comments_count'], ascending=[False, False])
+
+            return render(request, 'app/hashtag.html', {
+                'hashtag_media_data': hashtag_media_data,
+                'hashtag': hashtag
+            })
+        else:
+            redirect('hashtag')

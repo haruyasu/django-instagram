@@ -2,7 +2,14 @@
 
 {% block content %}
 
-<p>ハッシュタグ検索</p>
+<h4 class="mb-3">検索ハッシュタグ「{{ hashtag }}」</h4>
+
+<h4 class="mb-3">投稿推移</h4>
+<div class="card p-3 mb-3">
+    <canvas id="hashtag_chart"></canvas>
+</div>
+
+<h4 class="mb-3">検索結果</h4>
 
 <div class="row">
     {% for index, row in hashtag_media_data.iterrows %}
