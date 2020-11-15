@@ -6,7 +6,7 @@
 
 <h4 class="mb-3">投稿推移</h4>
 <div class="card p-3 mb-3">
-    <canvas id="hashtag_chart"></canvas>
+    <canvas id="hashtag_chart" height="400"></canvas>
 </div>
 
 <h4 class="mb-3">検索結果</h4>
@@ -41,5 +41,40 @@
         </div>
     {% endfor %}
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const hashtag_data = JSON.parse('{{ hashtag_count_data|safe }}');
+
+    const hashtag_ctx = document.getElementById("hashtag_chart");
+    const hashtag = new Chart(hashtag_ctx, {
+        type: 'line',
+        data: {
+            labels: hashtag_data.label_data,
+            datasets: [
+                {
+                    label: '投稿数',
+                    data: hashtag_data.count_data,
+                    borderColor: "rgba(207,46,146,0.5)",
+                    backgroundColor: "rgba(207,46,146,0.5)",
+                }
+            ],
+        },
+        options: {
+            elements: {
+                line: {
+                    tension: 0,
+                },
+            },
+            tooltips: {
+                mode: 'nearest',
+                intersect: false,
+            },
+            responsive: true,
+        }
+    });
+</script>
 
 {% endblock %}

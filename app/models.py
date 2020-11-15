@@ -10,6 +10,7 @@ class Insight(models.Model):
     def __str__(self):
         return str(self.label)
 
+
 class Post(models.Model):
     like = models.IntegerField('いいね')
     comments = models.IntegerField('コメント')
@@ -18,3 +19,12 @@ class Post(models.Model):
 
     def __str__(self):
         return str(self.label)
+
+
+class Hashtag(models.Model):
+    tag = models.CharField('ハッシュタグ', max_length=100)
+    count = models.IntegerField('投稿数')
+    label = models.CharField('投稿日', max_length=100)
+
+    def __str__(self):
+        return str(self.label) + ':' + str(self.tag)

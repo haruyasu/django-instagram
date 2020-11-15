@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from datetime import datetime, date
 from django.utils.timezone import localtime
 from django.conf import settings
-from .models import Insight, Post
+from .models import Insight, Post, Hashtag
 from .forms import HashtagForm
 import requests
 import json
@@ -45,7 +45,7 @@ def get_account_info(params):
     # ユーザ名、プロフィール画像、フォロワー数、フォロー数、投稿数、メディア情報取得
     endpoint_params['fields'] = 'business_discovery.username(' + params['ig_username'] + '){\
         username,profile_picture_url,follows_count,followers_count,media_count,\
-        media.limit(10){comments_count,like_count,caption,media_url,permalink,timestamp}}'
+        media.limit(10){comments_count,like_count,caption,media_url,permalink,timestamp,media_type,children{media_url,media_type}}}'
     endpoint_params['access_token'] = params['access_token']
     url = params['endpoint_base'] + params['instagram_account_id']
     return call_api(url, endpoint_params)
@@ -197,11 +197,21 @@ class IndexView(View):
         params['media_id'] = latest_media_data['id']
         media_response = get_media_insights(params)
         media_data = media_response['json_data']['data']
+        if latest_media_data['media_type'] == 'CAROUSEL_ALBUM':
+            media_url = latest_media_data['children']['data'][0]['media_url']
+            if latest_media_data['children']['data'][0]['media_type'] == 'VIDEO':
+                media_type = 'VIDEO'
+            else:
+                media_type = 'IMAGE'
+        else:
+            media_url = latest_media_data['media_url']
+            media_type = latest_media_data['media_type']
 
         # メディアのインサイトデータ
         insight_media_data = {
             'caption': latest_media_data['caption'],
-            'media_url': latest_media_data['media_url'],
+            'media_type': media_type,
+            'media_url': media_url,
             'permalink': latest_media_data['permalink'],
             'timestamp': localtime(datetime.strptime(latest_media_data['timestamp'], '%Y-%m-%dT%H:%M:%S%z')).strftime('%Y/%m/%d %H:%M'),
             'like_count': latest_media_data['like_count'],
@@ -315,9 +325,39 @@ class HashtagView(View):
             # いいね数、コメント数順で並び替え
             hashtag_media_data = hashtag_media_data.sort_values(['like_count', 'comments_count'], ascending=[False, False])
 
+            post_counts = hashtag_media_data['timestamp'].value_counts().to_dict()
+
+            for key, value in post_counts.items():
+                # ハッシュタグデータベースに保存
+                obj, created = Hashtag.objects.update_or_create(
+                    label=key,
+                    tag=hashtag,
+                    defaults={
+                        'count': value,
+                    }
+                )
+
+            # Postデーターベースからデータを取得
+            # order_byで昇順に並び替え
+            hashtag_data = Hashtag.objects.filter(tag=hashtag).order_by("label")
+            count_data = []
+            label_data = []
+            for data in hashtag_data:
+                # 投稿数
+                count_data.append(data.count)
+                # ラベル
+                label_data.append(data.label)
+
+            # ハッシュタグ毎の投稿データ
+            hashtag_count_data = {
+                'count_data': count_data,
+                'label_data': label_data,
+            }
+
             return render(request, 'app/hashtag.html', {
                 'hashtag_media_data': hashtag_media_data,
-                'hashtag': hashtag
+                'hashtag': hashtag,
+                'hashtag_count_data': json.dumps(hashtag_count_data),
             })
         else:
             redirect('hashtag')

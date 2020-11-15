@@ -43,16 +43,21 @@
 
 <h4 class="mt-4">投稿推移</h4>
 <div class="card p-3">
-    <canvas id="post_chart"></canvas>
+    <canvas id="post_chart" height="400"></canvas>
 </div>
-
 
 <h4 class="mt-4">最新投稿</h4>
 <div class="card p-3">
     <div class="row">
         <div class="col-md-4">
             <a href="{{ insight_media_data.permalink }}">
-                <img class="card-img-top" src="{{ insight_media_data.media_url }}" alt="">
+                {% if insight_media_data.media_type == 'VIDEO' %}
+                    <div class="embed-responsive embed-responsive-1by1 mb-3">
+                        <iframe class="embed-responsive-item" src="{{ insight_media_data.media_url }}" allowfullscreen></iframe>
+                    </div>
+                {% else %}
+                    <img src="{{ insight_media_data.media_url }}" class="card-img-top" alt="">
+                {% endif %}
             </a>
         </div>
         <div class="col-md-8">
