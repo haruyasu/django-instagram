@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from datetime import datetime, date
 from django.utils.timezone import localtime
 from django.conf import settings
-from .models import Insight, Post, Hashtag
+from .models import Insight, Post, HashTag
 from .forms import HashtagForm
 import requests
 import json
@@ -45,7 +45,8 @@ def get_account_info(params):
     # ユーザ名、プロフィール画像、フォロワー数、フォロー数、投稿数、メディア情報取得
     endpoint_params['fields'] = 'business_discovery.username(' + params['ig_username'] + '){\
         username,profile_picture_url,follows_count,followers_count,media_count,\
-        media.limit(10){comments_count,like_count,caption,media_url,permalink,timestamp,media_type,children{media_url,media_type}}}'
+        media.limit(10){comments_count,like_count,caption,media_url,permalink,timestamp,media_type,\
+        children{media_url,media_type}}}'
     endpoint_params['access_token'] = params['access_token']
     url = params['endpoint_base'] + params['instagram_account_id']
     return call_api(url, endpoint_params)
@@ -99,6 +100,7 @@ class IndexView(View):
         # アカウント情報取得
         account_response = get_account_info(params)
         business_discovery = account_response['json_data']['business_discovery']
+        # print(business_discovery)
         account_data = {
             'profile_picture_url': business_discovery['profile_picture_url'],
             'username': business_discovery['username'],
@@ -106,9 +108,9 @@ class IndexView(View):
             'follows_count': business_discovery['follows_count'],
             'media_count': business_discovery['media_count'],
         }
-
         # 本日の日付
         today = date.today()
+
         # Insightデーターベースに保存
         obj, created = Insight.objects.update_or_create(
             label=today,
@@ -284,10 +286,10 @@ class HashtagView(View):
             params['hashtag_name'] = hashtag
 
             # ハッシュタグID取得
-            hashtag_id_respinse = get_hashtag_id(params)
+            hashtag_id_response = get_hashtag_id(params)
 
             # ハッシュタグID設定
-            params['hashtag_id'] = hashtag_id_respinse['json_data']['data'][0]['id'];
+            params['hashtag_id'] = hashtag_id_response['json_data']['data'][0]['id'];
 
             # ハッシュタグ検索
             hashtag_media_response = get_hashtag_media(params)
@@ -330,7 +332,7 @@ class HashtagView(View):
 
             for key, value in post_counts.items():
                 # ハッシュタグデータベースに保存
-                obj, created = Hashtag.objects.update_or_create(
+                obj, created = HashTag.objects.update_or_create(
                     label=key,
                     tag=hashtag,
                     defaults={
@@ -340,7 +342,7 @@ class HashtagView(View):
 
             # Postデーターベースからデータを取得
             # order_byで昇順に並び替え
-            hashtag_data = Hashtag.objects.filter(tag=hashtag).order_by("label")
+            hashtag_data = HashTag.objects.filter(tag=hashtag).order_by("label")
             count_data = []
             label_data = []
             for data in hashtag_data:

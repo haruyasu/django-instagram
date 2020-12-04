@@ -31,8 +31,10 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <div>
-                            <i class="fas fa-heart text-secondary mr-2"></i><span class="mr-3">{{ row.like_count }}</span>
-                            <i class="fas fa-comment text-secondary mr-2"></i><span>{{ row.comments_count }}</span>
+                            <i class="fas fa-heart text-secondary mr-2"></i>
+                            <span class="mr-3">{{ row.like_count }}</span>
+                            <i class="fas fa-comment text-secondary mr-2"></i>
+                            <span>{{ row.comments_count }}</span>
                         </div>
                         <div>{{ row.timestamp }}</div>
                     </div>
@@ -73,6 +75,14 @@
                 intersect: false,
             },
             responsive: true,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        min: 0,
+                        stepSize: 1
+                    }
+                }]
+            }
         }
     });
 </script>

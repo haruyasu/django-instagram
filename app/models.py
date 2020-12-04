@@ -1,5 +1,4 @@
 from django.db import models
-from django.utils import timezone
 
 
 class Insight(models.Model):
@@ -21,7 +20,7 @@ class Post(models.Model):
         return str(self.label)
 
 
-class Hashtag(models.Model):
+class HashTag(models.Model):
     tag = models.CharField('ハッシュタグ', max_length=100)
     count = models.IntegerField('投稿数')
     label = models.CharField('投稿日', max_length=100)
