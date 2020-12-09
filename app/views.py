@@ -155,6 +155,7 @@ class IndexView(View):
                 like = data['like_count']
                 comments = data['comments_count']
                 post_timestamp = timestamp
+                count = 1
 
             # 投稿データベースに保存
             obj, created = Post.objects.update_or_create(
